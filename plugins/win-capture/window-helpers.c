@@ -129,27 +129,11 @@ void get_window_class(struct dstr *class, HWND hwnd)
 
 /* not capturable or internal windows, exact executable names */
 static const char *internal_microsoft_exes_exact[] = {
-	"startmenuexperiencehost.exe",
-	"applicationframehost.exe",
-	"peopleexperiencehost.exe",
-	"shellexperiencehost.exe",
-	"microsoft.notes.exe",
-	"systemsettings.exe",
-	"textinputhost.exe",
-	"searchapp.exe",
-	"video.ui.exe",
-	"searchui.exe",
-	"lockapp.exe",
-	"cortana.exe",
-	"gamebar.exe",
-	"tabtip.exe",
-	"time.exe",
 	NULL,
 };
 
 /* partial matches start from the beginning of the executable name */
 static const char *internal_microsoft_exes_partial[] = {
-	"windowsinternal",
 	NULL,
 };
 
@@ -157,17 +141,6 @@ static bool is_microsoft_internal_window_exe(const char *exe)
 {
 	if (!exe)
 		return false;
-
-	for (const char **vals = internal_microsoft_exes_exact; *vals; vals++) {
-		if (astrcmpi(exe, *vals) == 0)
-			return true;
-	}
-
-	for (const char **vals = internal_microsoft_exes_partial; *vals;
-	     vals++) {
-		if (astrcmpi_n(exe, *vals, strlen(*vals)) == 0)
-			return true;
-	}
 
 	return false;
 }
@@ -182,26 +155,10 @@ static void add_window(obs_property_t *p, HWND hwnd, add_window_cb callback)
 
 	if (!get_window_exe(&exe, hwnd))
 		return;
-	if (is_microsoft_internal_window_exe(exe.array)) {
-		dstr_free(&exe);
-		return;
-	}
 
 	get_window_title(&title, hwnd);
-	if (dstr_cmp(&exe, "explorer.exe") == 0 && dstr_is_empty(&title)) {
-		dstr_free(&exe);
-		dstr_free(&title);
-		return;
-	}
 
 	get_window_class(&class, hwnd);
-
-	if (callback && !callback(title.array, class.array, exe.array)) {
-		dstr_free(&title);
-		dstr_free(&class);
-		dstr_free(&exe);
-		return;
-	}
 
 	dstr_printf(&desc, "[%s]: %s", exe.array, title.array);
 
